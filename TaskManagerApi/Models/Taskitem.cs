@@ -7,10 +7,10 @@ public class TaskItem
     public int Id { get; set; }
     [Required]
     [MaxLength(100)]
-    public string Title { get; set; } = string.Empty;
+    public required string Title { get; set; }
     [Required]
     [MaxLength(500)]
-    public string Description { get; set; } = string.Empty;
+    public required string Description { get; set; }
     public bool IsCompleted { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public required DateTime CreatedAt { get; set; }
 }

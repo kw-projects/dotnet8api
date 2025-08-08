@@ -1,8 +1,10 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManagerApi", "TaskManagerApi.csproj", "{C8965ADB-C1C3-8E84-B5BD-52EFBDCFED3C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManagerApi.IntegrationTests", "..\TaskManagerApi.IntegrationTests\TaskManagerApi.IntegrationTests.csproj", "{EAE77D6A-8C1F-4328-978E-9A86671D4E89}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,6 +16,10 @@ Global
 		{C8965ADB-C1C3-8E84-B5BD-52EFBDCFED3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8965ADB-C1C3-8E84-B5BD-52EFBDCFED3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8965ADB-C1C3-8E84-B5BD-52EFBDCFED3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAE77D6A-8C1F-4328-978E-9A86671D4E89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAE77D6A-8C1F-4328-978E-9A86671D4E89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAE77D6A-8C1F-4328-978E-9A86671D4E89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAE77D6A-8C1F-4328-978E-9A86671D4E89}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

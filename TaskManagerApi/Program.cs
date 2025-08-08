@@ -1,22 +1,103 @@
+// Required configuration keys for JWT authentication:
+// - Jwt:Issuer
+// - Jwt:Audience
+// - Jwt:Key
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using TaskManagerApi.DATA;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Validate required JWT configuration keys at startup
+string jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "";
+string jwtAudience = builder.Configuration["Jwt:Audience"] ?? "";
+string jwtKey = builder.Configuration["Jwt:Key"] ?? "";
+
+if (string.IsNullOrWhiteSpace(jwtIssuer))
+    throw new InvalidOperationException("Jwt:Issuer configuration value is missing.");
+if (string.IsNullOrWhiteSpace(jwtAudience))
+    throw new InvalidOperationException("Jwt:Audience configuration value is missing.");
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt:Key configuration value is missing.");
+
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
+if (jwtSettings == null)
+{
+    throw new InvalidOperationException("JWT settings are not configured.");
+}
+builder.Services.AddSingleton(jwtSettings);
+
+//Configure JWT authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtKey)
+        )
+    };
+});
+// Add JWT support in Swagger
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\""
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "bearer",
+                Name = "Authorization",
+                In = ParameterLocation.Header
+            },
+            new string[] {}
+        }
+    });
+});
+
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
-
 //EntityFramework context
-builder.Services.AddDbContext<TaskDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Database connection string 'DefaultConnection' is missing or empty in configuration.");
+}
+builder.Services.AddDbContext<TaskDbContext>(options => options.UseNpgsql(connectionString));
 
 //register custom services here and DI
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 
 var app = builder.Build();
 
@@ -24,15 +105,17 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI();    
 }
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();    
 }
-
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
+

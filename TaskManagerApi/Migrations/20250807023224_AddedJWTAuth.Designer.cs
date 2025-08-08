@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TaskManagerApi.DATA;
@@ -11,9 +12,11 @@ using TaskManagerApi.DATA;
 namespace TaskManagerApi.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    partial class TaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250807023224_AddedJWTAuth")]
+    partial class AddedJWTAuth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,12 +78,6 @@ namespace TaskManagerApi.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("RefreshHashedToken")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("RefreshTokenExpiry")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Role")
                         .HasColumnType("text");
