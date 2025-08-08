@@ -1,0 +1,65 @@
+# Build output folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Visual Studio files
+.vs/
+.vscode/
+
+# Rider files
+.idea/
+
+# Logs
+*.log
+
+# NuGet
+*.nupkg
+packages/
+# The packages folder can be huge and is better restored via NuGet restore
+
+# EF Migrations snapshot files (optional, keep if you want)
+# **/Migrations/*.Designer.cs
+
+# ASP.NET Core files
+appsettings.*.json
+appsettings.Development.json
+
+# Secrets (if using UserSecrets)
+secrets.json
+
+# Publish output
+publish/
+
+# Docker files
+docker-compose.override.yml
+
+# Dotnet tool manifest
+.dotnet_tool_restore.json
+
+# npm logs if you have front-end packages
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backup files
+*.bak
+*.backup
+
+# Others
+*.pidb
+*.sln.docstates
+
+# JetBrains Rider
+.idea/
+
+# Resharper
+_ReSharper*/
+
+# MacOS system files
+.DS_Store
