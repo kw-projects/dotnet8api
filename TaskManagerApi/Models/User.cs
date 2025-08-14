@@ -13,6 +13,7 @@ public class User
     public string? RefreshHashedToken { get; set; }
     public DateTime RefreshTokenExpiry { get; set; }
     public string? Role { get; set; }
+    public IList<TaskItem> Tasks { get; set; } = new List<TaskItem>();
     public required DateTime CreatedAt { get; set; }
     public required DateTime UpdatedAt { get; set; }
 

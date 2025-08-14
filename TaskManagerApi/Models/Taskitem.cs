@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 [Table("TaskItems")]
 public class TaskItem
-{    
+{
     public int Id { get; set; }
     [Required]
     [MaxLength(100)]
@@ -13,4 +13,7 @@ public class TaskItem
     public required string Description { get; set; }
     public bool IsCompleted { get; set; }
     public required DateTime CreatedAt { get; set; }
+    public int? UserId { get; set; }
+    [ForeignKey("UserId")]
+    public User? User { get; set; }
 }

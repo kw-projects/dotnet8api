@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 [ApiController]
 [Authorize]
@@ -16,6 +17,22 @@ public class TaskController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskItem>>> GetAll()
     {
+
+
+        // Debug: Log current time and token expiry
+        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+        if (authHeader?.StartsWith("Bearer ") == true)
+        {
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+            var handler = new JsonWebTokenHandler();
+            var jsonToken = handler.ReadJsonWebToken(token);
+            
+            Console.WriteLine($"Current UTC Time: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"Token Expires: {jsonToken.ValidTo:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"Time until expiry: {jsonToken.ValidTo.Subtract(DateTime.UtcNow).TotalMinutes:F2} minutes");
+        }
+        
+
         var items = await _taskService.GetAllAsync();
         return Ok(items);
     }
@@ -32,7 +49,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Create(TaskItem item)
+    public async Task<ActionResult> Create([FromBody] TaskItem item)
     {
         if (!ModelState.IsValid)
         {
@@ -43,7 +60,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> Update(int id, TaskItem item)
+    public async Task<ActionResult> Update(int id,[FromBody] TaskItem item)
     {
         if (id != item.Id)
         {

@@ -1,5 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.CookiePolicy;
+
+public class UserRegistrationRequest
+{
+    public required string Name { get; set; }
+    public required string Email { get; set; }
+    public required string Password { get; set; }
+}
 
 [Route("[controller]")]
 public class AuthController : ControllerBase
@@ -14,36 +22,65 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(string name, RegisterRequest request)
+    public async Task<IActionResult> Register([FromBody] UserRegistrationRequest request)
     {
-        var user = await _authService.Register(name, request.Email, request.Password);
-        return CreatedAtAction(nameof(Login), new { id = user.Id }, user);
+        if (request == null || string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest("Name, Email, and Password are required.");
+
+        try
+        {
+            var user = await _authService.Register(request.Name, request.Email, request.Password);
+
+            return CreatedAtAction(nameof(Login), new { id = user.Id }, user);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("User already exists"))
+        {
+            return Conflict(new { message = "User with this email already exists" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var authResult = await _authService.Login(request);
-
-        //Create a http-only cookie to store refresh token
-        var cookieOptions = new CookieOptions
+        try
         {
-            HttpOnly = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays)
-        };
+            var authResult = await _authService.Login(request);
 
-        Response.Cookies.Append("refreshToken", authResult.RefreshToken, cookieOptions);
+            //Create a http-only cookie to store refresh token
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays)
+            };
 
-        return Ok(new
+            Response.Cookies.Append("refreshToken", authResult.RefreshToken, cookieOptions);
+
+            return Ok(new
+            {
+                accessToken = authResult.AccessToken
+            });
+        }
+        catch (UnauthorizedAccessException ex)
         {
-            accessToken = authResult.AccessToken
-        });
+            return Unauthorized(new { message = ex.Message });
+        }
     }
 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
+        //Remove the refresh token cookie
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.Strict
+        });
+        
         await _authService.Logout();
         return NoContent();
     }
@@ -56,7 +93,7 @@ public class AuthController : ControllerBase
         string currentRefreshToken = Request.Cookies["refreshToken"] ?? string.Empty;
         if(String.IsNullOrEmpty(currentRefreshToken))
         {            
-            throw new UnauthorizedAccessException("Invalid token");
+            return Unauthorized("Invalid token");
         }
 
         //create new refresh token for user and update it

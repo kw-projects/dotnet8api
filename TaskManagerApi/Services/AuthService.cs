@@ -25,7 +25,7 @@ public class AuthService : IAuthService
     public async Task<User> Register(string name, string email, string password)
     {
         var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (existingUser != null) throw new Exception("User already exists");
+        if (existingUser != null) throw new InvalidOperationException("User already exists");
 
         var user = new User
         {
@@ -64,7 +64,7 @@ public class AuthService : IAuthService
         _logger.LogInformation($"Updated user id: {user.Id}");
         _logger.LogInformation($"Login successful for user: {user.Name}");
 
-
+        _logger.LogInformation($"Updated user id: {accessToken}:{user.RefreshHashedToken}");
         return new AuthResult
         {
             AccessToken = accessToken,
@@ -81,16 +81,17 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid token");
         }
 
-        user.RefreshHashedToken = TokenHelper.GenerateJwtToken(user, _jwtSettings.Key, _jwtSettings.RefreshTokenExpireDays);
-        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays);
-        _dbContext.Users.Update(user);
-        await _dbContext.SaveChangesAsync();
+        if (user.RefreshTokenExpiry <= DateTime.UtcNow)
+        {
+            _logger.LogWarning($"Token refresh failed for user: {user?.Name}");
+            throw new UnauthorizedAccessException("Token expired");
+        }
 
-        _logger.LogInformation($"Token refreshed successfully for user: {user.Name}");
+        // Only generate a NEW ACCESS TOKEN, keep the same refresh token
         return new AuthResult
         {
             AccessToken = TokenHelper.GenerateJwtToken(user, _jwtSettings.Key, _jwtSettings.AccessTokenExpireMinutes),
-            RefreshToken = user.RefreshHashedToken
+            RefreshToken = user.RefreshHashedToken ?? string.Empty
         };
     }
 
@@ -101,5 +102,10 @@ public class AuthService : IAuthService
         await Task.CompletedTask;
     }
     
-
+public class UserRegistrationRequest
+{
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public string Password { get; set; }
+}
 }

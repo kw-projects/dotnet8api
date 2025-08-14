@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TaskManagerApi.DATA;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.FileSystemGlobbing.Internal.PathSegments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 string jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "";
 string jwtAudience = builder.Configuration["Jwt:Audience"] ?? "";
 string jwtKey = builder.Configuration["Jwt:Key"] ?? "";
+string jwtAccessTokenExpiry = builder.Configuration["Jwt:AccessTokenExpireMinutes"] ?? "";
 
 if (string.IsNullOrWhiteSpace(jwtIssuer))
     throw new InvalidOperationException("Jwt:Issuer configuration value is missing.");
@@ -28,7 +30,17 @@ if (jwtSettings == null)
 {
     throw new InvalidOperationException("JWT settings are not configured.");
 }
+jwtSettings.AccessTokenExpireMinutes = int.Parse(jwtAccessTokenExpiry); // Ensure the key is set from configuration
 builder.Services.AddSingleton(jwtSettings);
+
+// Setup logging for Program
+builder.Services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.AddConsole();
+    loggingBuilder.AddDebug();
+});
+Console.WriteLine("Settings:" + jwtSettings.AccessTokenExpireMinutes);
+
 
 //Configure JWT authentication
 builder.Services.AddAuthentication(options =>
@@ -45,11 +57,13 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
+        ValidAudience = jwtAudience,        
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtKey)
         )
     };
+    // Force ClockSkew to zero AFTER setting other parameters
+    options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;        
 });
 // Add JWT support in Swagger
 builder.Services.AddSwaggerGen(options =>
@@ -118,4 +132,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+//allows test projects to access internal members
+public partial class Program { }
 

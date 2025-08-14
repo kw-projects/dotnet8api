@@ -19,8 +19,10 @@ public static class TokenHelper
             {
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role ?? string.Empty)
+                new Claim(ClaimTypes.Role, user.Role ?? string.Empty),
+                new Claim("id", user.Id.ToString())
             }),
+            NotBefore = DateTime.UtcNow,
             Expires = expiryDays.HasValue ? DateTime.UtcNow.AddDays(expiryDays.Value) : DateTime.UtcNow.AddMinutes(expireMinutes),
             //sign jwt token
             Issuer = "TaskManagerApi",
