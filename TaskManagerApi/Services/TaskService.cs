@@ -9,7 +9,7 @@ public class TaskService : ITaskService
     public TaskService(ILogger<TaskService> logger, TaskDbContext taskDbContext)
     {
         _logger = logger;
-        _taskDbContext = taskDbContext;        
+        _taskDbContext = taskDbContext;
     }
 
     public async Task<IList<TaskItem>> GetAllAsync()
@@ -48,7 +48,7 @@ public class TaskService : ITaskService
         _taskDbContext.Tasks.Update(item);
         await _taskDbContext.SaveChangesAsync();
         _logger.LogInformation($"Updated task item id: {item.Id}");
-        
+
         return item;
     }
 
@@ -61,5 +61,12 @@ public class TaskService : ITaskService
             await _taskDbContext.SaveChangesAsync();
             _logger.LogInformation($"Deleted task item id: {id}");
         }
+    }
+    
+    public async Task<IEnumerable<TaskItem>> GetTasksByUserIdAsync(int userId)
+    {        
+        return await _taskDbContext.Tasks
+            .Where(t => t.UserId == userId)
+            .ToListAsync();
     }
 }

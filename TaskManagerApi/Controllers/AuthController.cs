@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity.Data;
-using Microsoft.AspNetCore.CookiePolicy;
+
 
 public class UserRegistrationRequest
 {
@@ -9,6 +9,7 @@ public class UserRegistrationRequest
     public required string Password { get; set; }
 }
 
+[ApiController]
 [Route("[controller]")]
 public class AuthController : ControllerBase
 {

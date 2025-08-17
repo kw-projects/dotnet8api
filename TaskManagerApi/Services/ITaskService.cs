@@ -6,4 +6,5 @@ public interface ITaskService
     Task<int> CreateAsync(TaskItem item);
     Task<TaskItem?> UpdateAsync(int id, TaskItem item);
     Task DeleteAsync(int id);
+    Task<IEnumerable<TaskItem>> GetTasksByUserIdAsync(int userId);
 }

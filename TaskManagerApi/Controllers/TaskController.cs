@@ -26,12 +26,12 @@ public class TaskController : ControllerBase
             var token = authHeader.Substring("Bearer ".Length).Trim();
             var handler = new JsonWebTokenHandler();
             var jsonToken = handler.ReadJsonWebToken(token);
-            
+
             Console.WriteLine($"Current UTC Time: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
             Console.WriteLine($"Token Expires: {jsonToken.ValidTo:yyyy-MM-dd HH:mm:ss}");
             Console.WriteLine($"Time until expiry: {jsonToken.ValidTo.Subtract(DateTime.UtcNow).TotalMinutes:F2} minutes");
         }
-        
+
 
         var items = await _taskService.GetAllAsync();
         return Ok(items);
@@ -60,7 +60,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> Update(int id,[FromBody] TaskItem item)
+    public async Task<ActionResult> Update(int id, [FromBody] TaskItem item)
     {
         if (id != item.Id)
         {
@@ -75,5 +75,17 @@ public class TaskController : ControllerBase
     {
         await _taskService.DeleteAsync(id);
         return NoContent();
+    }
+    
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<IEnumerable<TaskItem>>> GetUserTasks(int userId)
+    {
+        if (userId <= 0)
+        {
+            return BadRequest("Invalid user ID");
+        }
+
+        var userTasks = await _taskService.GetTasksByUserIdAsync(userId);
+        return Ok(userTasks);
     }
 }
