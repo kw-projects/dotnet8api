@@ -1,8 +1,12 @@
+using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 
 [ApiController]
+[EnableCors("AllowAll")]
 [Authorize]
 [Route("[controller]")]
 public class TaskController : ControllerBase
@@ -15,7 +19,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TaskItem>>> GetAll()
+    public async Task<ActionResult<IEnumerable<TaskItemDto>>> GetAll()
     {
 
 
@@ -34,6 +38,7 @@ public class TaskController : ControllerBase
 
 
         var items = await _taskService.GetAllAsync();
+        
         return Ok(items);
     }
 

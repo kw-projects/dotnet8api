@@ -33,6 +33,19 @@ if (jwtSettings == null)
 jwtSettings.AccessTokenExpireMinutes = int.Parse(jwtAccessTokenExpiry); // Ensure the key is set from configuration
 builder.Services.AddSingleton(jwtSettings);
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200") // Replace with your client's origin
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
 // Setup logging for Program
 builder.Services.AddLogging(loggingBuilder =>
 {
@@ -112,6 +125,8 @@ builder.Services.AddDbContext<TaskDbContext>(options => options.UseNpgsql(connec
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Register AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 
@@ -124,8 +139,9 @@ if (app.Environment.IsDevelopment())
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseHttpsRedirection();    
+    app.UseHttpsRedirection();
 }
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 

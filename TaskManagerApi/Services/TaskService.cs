@@ -1,20 +1,27 @@
 using TaskManagerApi.DATA;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using System.Text.Json;
 
 public class TaskService : ITaskService
 {
     private readonly ILogger<TaskService> _logger;
     private readonly TaskDbContext _taskDbContext;
+    private readonly IMapper _mapper;
 
-    public TaskService(ILogger<TaskService> logger, TaskDbContext taskDbContext)
+    public TaskService(ILogger<TaskService> logger, TaskDbContext taskDbContext, IMapper mapper)
     {
         _logger = logger;
         _taskDbContext = taskDbContext;
+        _mapper = mapper;
     }
 
-    public async Task<IList<TaskItem>> GetAllAsync()
-    {
-        return await _taskDbContext.Tasks.ToListAsync();
+    public async Task<IList<TaskItemDto>> GetAllAsync()
+    {             
+        return await _taskDbContext.Tasks
+            .ProjectTo<TaskItemDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
     public async Task<TaskItem?> GetByIdAsync(int id)

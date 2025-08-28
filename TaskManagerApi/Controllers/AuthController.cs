@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Cors;
 
 
 public class UserRegistrationRequest
@@ -8,7 +9,8 @@ public class UserRegistrationRequest
     public required string Email { get; set; }
     public required string Password { get; set; }
 }
-
+//allow cross origin requests
+[EnableCors("AllowAll")]
 [ApiController]
 [Route("[controller]")]
 public class AuthController : ControllerBase
